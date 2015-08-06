@@ -62,7 +62,7 @@ public enum DriverStrategy {
 	SORTED_REDUCE(ReduceDriver.class, null, PIPELINED, 1),
 	// sorted partial reduce is the combiner for the Reduce. same function, but potentially not fully sorted
 	SORTED_PARTIAL_REDUCE(ReduceCombineDriver.class, null, MATERIALIZING, 1),
-	
+
 	// grouping the inputs and apply the GroupReduce function
 	SORTED_GROUP_REDUCE(GroupReduceDriver.class, null, PIPELINED, 1),
 	// partially grouping inputs (best effort resulting possibly in duplicates --> combiner)
@@ -73,6 +73,12 @@ public enum DriverStrategy {
 
 	// both inputs are merged, but materialized to the side for block-nested-loop-join among values with equal key
 	MERGE(JoinDriver.class, null, MATERIALIZING, MATERIALIZING, 2),
+
+	LEFT_OUTER_MERGE(LeftOuterJoinDriver.class, null, MATERIALIZING, MATERIALIZING, 2),
+
+	RIGHT_OUTER_MERGE(RightOuterJoinDriver.class, null, MATERIALIZING, MATERIALIZING, 2),
+
+	FULL_OUTER_MERGE(FullOuterJoinDriver.class, null, MATERIALIZING, MATERIALIZING, 2),
 
 	// co-grouping inputs
 	CO_GROUP(CoGroupDriver.class, null, PIPELINED, PIPELINED, 2),
@@ -102,7 +108,7 @@ public enum DriverStrategy {
 	UNION(null, null, PIPELINED, PIPELINED, 0),
 	// explicit binary union between a streamed and a cached input
 	UNION_WITH_CACHED(UnionWithTempOperator.class, null, FULL_DAM, PIPELINED, 0);
-	
+
 	// --------------------------------------------------------------------------------------------
 	
 	private final Class<? extends PactDriver<?, ?>> driverClass;

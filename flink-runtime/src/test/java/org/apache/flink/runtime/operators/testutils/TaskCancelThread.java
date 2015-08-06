@@ -25,6 +25,7 @@ import org.junit.Assert;
 public class TaskCancelThread extends Thread {
 	
 	private final DriverTestBase<?> cancelDriver;
+	private final BinaryOperatorTestBase<?, ?, ?> binaryOperatorTask;
 	private final AbstractInvokable cancelTask;
 	private final Thread interruptedThread;
 	
@@ -36,6 +37,15 @@ public class TaskCancelThread extends Thread {
 		this.cancelTimeout = cancelTimeout;
 		this.interruptedThread = interruptedThread;
 		this.cancelDriver = canceledTask;
+		this.binaryOperatorTask = null;
+		this.cancelTask = null;
+	}
+
+	public TaskCancelThread(int cancelTimeout, Thread interruptedThread, BinaryOperatorTestBase<?, ?, ?> canceledTask) {
+		this.cancelTimeout = cancelTimeout;
+		this.interruptedThread = interruptedThread;
+		this.cancelDriver = null;
+		this.binaryOperatorTask = canceledTask;
 		this.cancelTask = null;
 	}
 	
@@ -43,6 +53,7 @@ public class TaskCancelThread extends Thread {
 		this.cancelTimeout = cancelTimeout;
 		this.interruptedThread = interruptedThread;
 		this.cancelDriver = null;
+		this.binaryOperatorTask = null;
 		this.cancelTask = canceledTask;
 	}
 	
@@ -58,6 +69,9 @@ public class TaskCancelThread extends Thread {
 		try {
 			if (this.cancelDriver != null) {
 				this.cancelDriver.cancel();
+			}
+			if (this.binaryOperatorTask != null) {
+				this.binaryOperatorTask.cancel();
 			}
 			if (this.cancelTask != null) {
 				this.cancelTask.cancel();
