@@ -94,12 +94,16 @@ public class JoinOperatorBase<IN1, IN2, OUT, FT extends FlatJoinFunction<IN1, IN
 		 */
 		REPARTITION_SORT_MERGE
 	};
-	
+
+	public static enum JoinType {INNER, LEFT_OUTER, RIGHT_OUTER, FULL_OUTER}
+
+
 	// --------------------------------------------------------------------------------------------
 	
 	
 	private JoinHint joinHint = JoinHint.OPTIMIZER_CHOOSES;
-	
+	private JoinType joinType = JoinType.INNER;
+
 	private Partitioner<?> partitioner;
 	
 	
@@ -126,7 +130,15 @@ public class JoinOperatorBase<IN1, IN2, OUT, FT extends FlatJoinFunction<IN1, IN
 	public JoinHint getJoinHint() {
 		return joinHint;
 	}
-	
+
+	public JoinType getJoinType() {
+		return joinType;
+	}
+
+	public void setJoinType(JoinType joinType) {
+		this.joinType = joinType;
+	}
+
 	public void setCustomPartitioner(Partitioner<?> partitioner) {
 		this.partitioner = partitioner;
 	}

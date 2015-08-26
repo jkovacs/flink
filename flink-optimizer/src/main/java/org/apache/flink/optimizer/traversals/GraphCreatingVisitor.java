@@ -40,29 +40,7 @@ import org.apache.flink.api.common.operators.base.ReduceOperatorBase;
 import org.apache.flink.api.common.operators.base.SortPartitionOperatorBase;
 import org.apache.flink.optimizer.CompilerException;
 import org.apache.flink.optimizer.Optimizer;
-import org.apache.flink.optimizer.dag.BinaryUnionNode;
-import org.apache.flink.optimizer.dag.BulkIterationNode;
-import org.apache.flink.optimizer.dag.BulkPartialSolutionNode;
-import org.apache.flink.optimizer.dag.CoGroupNode;
-import org.apache.flink.optimizer.dag.CollectorMapNode;
-import org.apache.flink.optimizer.dag.CrossNode;
-import org.apache.flink.optimizer.dag.DagConnection;
-import org.apache.flink.optimizer.dag.DataSinkNode;
-import org.apache.flink.optimizer.dag.DataSourceNode;
-import org.apache.flink.optimizer.dag.FilterNode;
-import org.apache.flink.optimizer.dag.FlatMapNode;
-import org.apache.flink.optimizer.dag.GroupCombineNode;
-import org.apache.flink.optimizer.dag.GroupReduceNode;
-import org.apache.flink.optimizer.dag.JoinNode;
-import org.apache.flink.optimizer.dag.MapNode;
-import org.apache.flink.optimizer.dag.MapPartitionNode;
-import org.apache.flink.optimizer.dag.OptimizerNode;
-import org.apache.flink.optimizer.dag.PartitionNode;
-import org.apache.flink.optimizer.dag.ReduceNode;
-import org.apache.flink.optimizer.dag.SolutionSetNode;
-import org.apache.flink.optimizer.dag.SortPartitionNode;
-import org.apache.flink.optimizer.dag.WorksetIterationNode;
-import org.apache.flink.optimizer.dag.WorksetNode;
+import org.apache.flink.optimizer.dag.*;
 import org.apache.flink.util.Visitor;
 
 import java.util.ArrayList;
@@ -70,7 +48,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.flink.api.common.operators.base.CoGroupRawOperatorBase;
-import org.apache.flink.optimizer.dag.CoGroupRawNode;
 
 /**
  * This traversal creates the optimizer DAG from a program.
@@ -161,7 +138,12 @@ public class GraphCreatingVisitor implements Visitor<Operator<?>> {
 			n = new GroupReduceNode((GroupReduceOperatorBase<?, ?, ?>) c);
 		}
 		else if (c instanceof JoinOperatorBase) {
-			n = new JoinNode((JoinOperatorBase<?, ?, ?, ?>) c);
+			JoinOperatorBase<?, ?, ?, ?> joinBase = (JoinOperatorBase<?, ?, ?, ?>) c;
+			if (joinBase.getJoinType() == JoinOperatorBase.JoinType.INNER) {
+				n = new JoinNode(joinBase);
+			} else {
+				n = new OuterJoinNode(joinBase);
+			}
 		}
 		else if (c instanceof CoGroupOperatorBase) {
 			n = new CoGroupNode((CoGroupOperatorBase<?, ?, ?, ?>) c);
