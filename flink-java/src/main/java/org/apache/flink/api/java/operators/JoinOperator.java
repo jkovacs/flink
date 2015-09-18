@@ -702,8 +702,8 @@ public abstract class JoinOperator<I1, I2, OUT> extends TwoInputUdfOperator<I1, 
 		
 		protected ProjectJoin(DataSet<I1> input1, DataSet<I2> input2, Keys<I1> keys1, Keys<I2> keys2, JoinHint hint, int[] fields, boolean[] isFromFirst, TupleTypeInfo<OUT> returnType, JoinProjection<I1, I2> joinProj) {
 			super(input1, input2, keys1, keys2, 
-					new ProjectFlatJoinFunction<I1, I2, OUT>(fields, isFromFirst, demoteToObject(returnType, joinProj.joinType)),
-					demoteToObject(returnType, joinProj.joinType), hint, Utils.getCallLocationName(4), joinProj.joinType);
+					new ProjectFlatJoinFunction<I1, I2, OUT>(fields, isFromFirst, demoteToGeneric(returnType, isFromFirst, joinProj.joinType)),
+					demoteToGeneric(returnType, isFromFirst, joinProj.joinType), hint, Utils.getCallLocationName(4), joinProj.joinType);
 			
 			this.joinProj = joinProj;
 		}
@@ -806,14 +806,18 @@ public abstract class JoinOperator<I1, I2, OUT> extends TwoInputUdfOperator<I1, 
 					getInput1Type(), getInput2Type());
 		}
 
-		private static <OUT extends Tuple> TupleTypeInfo<OUT> demoteToObject(TupleTypeInfo<OUT> returnType, JoinType type) {
+		private static <OUT extends Tuple> TupleTypeInfo<OUT> demoteToGeneric(TupleTypeInfo<OUT> returnType, boolean[] isFromFirst, JoinType type) {
 			if (type == JoinType.INNER) {
 				return returnType;
 			} else {
 				TypeInformation<?>[] objectTypes = new TypeInformation[returnType.getArity()];
 				for (int i = 0; i < returnType.getArity(); i++) {
 					TypeInformation<?> typeAt = returnType.getTypeAt(i);
-					objectTypes[i] = new GenericTypeInfo<>(typeAt.getTypeClass());
+					if ((isFromFirst[i] && type == JoinType.LEFT_OUTER) || (!isFromFirst[i] && type == JoinType.RIGHT_OUTER)) {
+						objectTypes[i] = typeAt;
+					} else {
+						objectTypes[i] = new GenericTypeInfo<>(typeAt.getTypeClass());
+					}
 				}
 				return new TupleTypeInfo<>(objectTypes);
 			}
