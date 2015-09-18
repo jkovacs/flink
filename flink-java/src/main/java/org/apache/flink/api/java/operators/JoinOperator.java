@@ -811,7 +811,10 @@ public abstract class JoinOperator<I1, I2, OUT> extends TwoInputUdfOperator<I1, 
 				return returnType;
 			} else {
 				TypeInformation<?>[] objectTypes = new TypeInformation[returnType.getArity()];
-				Arrays.fill(objectTypes, new GenericTypeInfo<>(Object.class));
+				for (int i = 0; i < returnType.getArity(); i++) {
+					TypeInformation<?> typeAt = returnType.getTypeAt(i);
+					objectTypes[i] = new GenericTypeInfo<>(typeAt.getTypeClass());
+				}
 				return new TupleTypeInfo<>(objectTypes);
 			}
 		}
