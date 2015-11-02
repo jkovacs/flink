@@ -22,40 +22,41 @@ package org.apache.flink.api.scala.operators;
 import com.google.common.base.Preconditions;
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.typeutils.CompositeType;
+import org.apache.flink.api.common.typeutils.TypeSerializer;
 import org.apache.flink.api.java.io.CommonCsvInputFormat;
 import org.apache.flink.api.java.typeutils.PojoTypeInfo;
 import org.apache.flink.api.java.typeutils.TupleTypeInfoBase;
-import org.apache.flink.api.java.typeutils.runtime.TupleSerializerBase;
+import org.apache.flink.api.java.typeutils.runtime.TupleCreator;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.util.StringUtils;
 
 public class ScalaCsvInputFormat<OUT> extends CommonCsvInputFormat<OUT> {
 	private static final long serialVersionUID = -7347888812778968640L;
 
-	private final TupleSerializerBase<OUT> tupleSerializer;
+	private final TupleCreator<OUT> tupleCreator;
 
 	public ScalaCsvInputFormat(Path filePath, CompositeType<OUT> typeInfo) {
 		super(filePath, typeInfo);
 
 		Preconditions.checkArgument(typeInfo instanceof PojoTypeInfo || typeInfo instanceof TupleTypeInfoBase,
-			"Only pojo types or tuple types are supported.");
+				"Only pojo types or tuple types are supported.");
 
-		if (typeInfo instanceof TupleTypeInfoBase) {
-			TupleTypeInfoBase<OUT> tupleTypeInfo = (TupleTypeInfoBase<OUT>) typeInfo;
+		TypeSerializer<OUT> serializer = typeInfo.createSerializer(new ExecutionConfig());
 
-			tupleSerializer = (TupleSerializerBase<OUT>)tupleTypeInfo.createSerializer(new ExecutionConfig());
+		if (serializer instanceof TupleCreator) {
+			tupleCreator = (TupleCreator<OUT>) serializer;
 		} else {
-			tupleSerializer = null;
+			tupleCreator = null;
 		}
 	}
 
 	@Override
 	protected OUT createTuple(OUT reuse) {
-		Preconditions.checkNotNull(tupleSerializer, "The tuple serializer must be initialised." +
-			" It is not initialized if the given type was not a " +
-			TupleTypeInfoBase.class.getName() + ".");
+		Preconditions.checkNotNull(tupleCreator, "The tuple serializer must be initialised." +
+				" It is not initialized if the given type was not a " +
+				TupleTypeInfoBase.class.getName() + ".");
 
-		return tupleSerializer.createInstance(parsedValues);
+		return tupleCreator.createInstance(parsedValues);
 	}
 
 	@Override

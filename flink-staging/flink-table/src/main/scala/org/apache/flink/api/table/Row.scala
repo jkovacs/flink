@@ -25,13 +25,45 @@ class Row(arity: Int) extends Product {
 
   private val fields = new Array[Any](arity)
 
+  def this(fields: Any*) = {
+    this(fields.length)
+    fields.copyToArray(this.fields)
+  }
+
+  def this(copyFrom: Row, fields: Any*) = {
+    this(copyFrom.productArity + fields.size)
+    copyFrom.fields.copyToArray(this.fields)
+    fields.copyToArray(this.fields, copyFrom.productArity)
+  }
+
   def productArity = fields.length
 
   def productElement(i: Int): Any = fields(i)
 
-  def setField(i: Int, value: Any): Unit = fields(i) = value
-
   def canEqual(that: Any) = false
+
+  def apply(i: Int): Any = productElement(i)
+
+  def apply(fieldName: String)(implicit s: Schema): Any =
+    productElement(s.index(fieldName))
+
+  def getAs[T](i: Int): T =
+    productElement(i).asInstanceOf[T]
+
+  def getAs[T](fieldName: String)(implicit s: Schema): T =
+    getAs[T](s.index(fieldName))
+
+  def setField(i: Int, value: Any): Unit =
+    fields(i) = value
+
+  def setField(fieldName: String, value: Any)(implicit s: Schema): Unit =
+    fields(s.index(fieldName)) = value
+
+  def update(i: Int, value: Any): Unit =
+    fields(i) = value
+
+  def update(fieldName: String, value: Any)(implicit s: Schema): Unit =
+    fields(s.index(fieldName)) = value
 
   override def toString = fields.mkString(",")
 

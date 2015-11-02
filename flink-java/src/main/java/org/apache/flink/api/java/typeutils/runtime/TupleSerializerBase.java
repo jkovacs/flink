@@ -28,7 +28,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 
-public abstract class TupleSerializerBase<T> extends TypeSerializer<T> {
+public abstract class TupleSerializerBase<T> extends TypeSerializer<T> implements TupleCreator<T> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -65,6 +65,7 @@ public abstract class TupleSerializerBase<T> extends TypeSerializer<T> {
 
 	// We use this in the Aggregate and Distinct Operators to create instances
 	// of immutable Typles (i.e. Scala Tuples)
+	@Override
 	public abstract T createInstance(Object[] fields);
 
 	@Override

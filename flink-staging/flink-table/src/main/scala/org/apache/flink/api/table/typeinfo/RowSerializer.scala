@@ -17,6 +17,7 @@
  */
 package org.apache.flink.api.table.typeinfo
 
+import org.apache.flink.api.java.typeutils.runtime.TupleCreator
 import org.apache.flink.api.table.Row
 import org.apache.flink.api.common.typeutils.TypeSerializer
 import org.apache.flink.core.memory.{DataOutputView, DataInputView}
@@ -25,7 +26,8 @@ import org.apache.flink.core.memory.{DataOutputView, DataInputView}
  * Serializer for [[Row]].
  */
 class RowSerializer(val fieldSerializers: Array[TypeSerializer[Any]])
-  extends TypeSerializer[Row] {
+  extends TypeSerializer[Row]
+  with TupleCreator[Row] {
 
   override def isImmutableType: Boolean = false
 
@@ -35,6 +37,10 @@ class RowSerializer(val fieldSerializers: Array[TypeSerializer[Any]])
 
   override def createInstance: Row = {
     new Row(fieldSerializers.length)
+  }
+
+  override def createInstance(fields: Array[Object]): Row = {
+    new Row(fields: _*)
   }
 
   override def copy(from: Row, reuse: Row): Row = {
